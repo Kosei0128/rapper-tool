@@ -28,9 +28,10 @@
 
 ---
 
-## Phase 1.5 — デプロイ済み・push 待ちの可能性 🚢
+## Phase 1.5 — 完了 ✅
 
-- [ ] 古典韻フィルタ + チェックボックスの本番反映確認
+- [x] 古典韻フィルタ + チェックボックス本番反映
+- [x] Supabase クラウド保存（Vercel + テーブル接続）
 - [ ] 友人フィードバック（iPhone Safari）
 
 ---
@@ -53,7 +54,8 @@
 - [ ] LLM にメモ帳構造（notepadStructureHint）を渡す
 
 ### 保存
-- [ ] Supabase 設定ガイド（README）
+- [x] Supabase 設定ガイド → [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md)
+- [x] Supabase クラウド保存（歌詞履歴・本番接続済）
 - [x] プロジェクトのエクスポート JSON / TXT（TXT 歌詞・韻）
 
 ---
@@ -84,8 +86,8 @@
 | フレームワーク | Next.js 16 + TypeScript |
 | LLM | DeepSeek V4 Pro |
 | 韻API | nwnwn, azrhymes, in-note |
-| 保存 | localStorage + Supabase（任意） |
-| 分析 | 自前 + nwnwn 読み |
+| 保存 | localStorage + Supabase（本番接続済） |
+| 分析 | 自前 + kuromoji 読み |
 
 ---
 

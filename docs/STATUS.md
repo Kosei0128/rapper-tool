@@ -3,7 +3,7 @@
 > **iPhone からこのファイルを開けば、PC なしで「今どこまで？」が分かります。**  
 > GitHub: `docs/STATUS.md` / 本番: https://rappertool.vercel.app
 
-**最終更新:** 2026-05
+**最終更新:** 2026-05-25
 
 ---
 
@@ -16,6 +16,7 @@
 | ホスティング | Vercel（`master` push で自動デプロイ） |
 | 歌詞生成 API | DeepSeek V4 Pro（Vercel 環境変数） |
 | 韻 API | nwnwn + azrhymes + in-note |
+| クラウド DB | Supabase `rapper_tool`（東京）接続済 ✅ |
 
 ---
 
@@ -33,13 +34,14 @@
 - **韻候補タップ → メモ帳/歌詞に挿入**
 - **PWA**（ホーム画面に追加可能）
 - **kuromoji 読み仮名**（漢字歌詞の読み精度向上）
+- **Supabase クラウド保存**（歌詞タブ「保存」→ `lyrics_generations`）
 
 ---
 
-## 次にやること（Vercel 内）
+## 次にやること
 
-1. Supabase クラウド保存（env 設定）
-2. 友人フィードバック（iPhone Safari）
+1. **友人フィードバック**（iPhone Safari で本番 URL を試す）
+2. **Phase 3** — Google ログイン + プロジェクト全体のクラウド同期
 
 詳細 → [VERCEL_SCOPE.md](./VERCEL_SCOPE.md) / [plan.md](../plan.md)
 
@@ -53,6 +55,7 @@
 | [STATUS.md](./STATUS.md) | **このファイル（進捗）** |
 | [MOBILE_DEV.md](./MOBILE_DEV.md) | iPhone から開発を進める方法 |
 | [RHYME_FILTER.md](./RHYME_FILTER.md) | 古典語ハックフィルタの意味 |
+| [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) | Supabase 接続手順 |
 | [VERCEL_SCOPE.md](./VERCEL_SCOPE.md) | Vercel でできること一覧 |
 
 ---
@@ -64,4 +67,5 @@
 ```
 @docs/STATUS.md @docs/REQUIREMENTS.md @plan.md を読んで、
 [やりたいこと] を実装して。古典韻はデフォルトOFF、必要ならSetupのチェックON。
+Supabase は接続済み。
 ```

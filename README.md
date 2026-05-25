@@ -17,6 +17,7 @@
 - [docs/STATUS.md](docs/STATUS.md) — **進捗（iPhone から見る用）**
 - [docs/MOBILE_DEV.md](docs/MOBILE_DEV.md) — iPhone から開発する方法
 - [docs/RHYME_FILTER.md](docs/RHYME_FILTER.md) — 古典語ハックフィルタの説明
+- [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md) — **Supabase クラウド保存の設定**
 - [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) — 要件定義
 - [plan.md](plan.md) — ロードマップ
 

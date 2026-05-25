@@ -18,13 +18,14 @@
 | **TXT エクスポート** | 歌詞・韻候補 |
 | **韻候補タップ→挿入** | メモ帳 / 歌詞 |
 | **PWA** | ホーム画面追加（manifest + icon） |
+| **Supabase クラウド保存** | 歌詞履歴（Vercel env + テーブル設定済） |
 | GitHub 連携デプロイ | push → 自動反映 |
 
 ## 🔜 Vercel で可能（未実装）
 
 | 機能 | 手段 |
 |------|------|
-| Supabase クラウド保存 | env 設定のみ |
+| プロジェクト全体のクラウド同期 | Supabase Auth + 新テーブル |
 
 ## ❌ VPS が必要 / 向かない
 
@@ -43,6 +44,8 @@ DEEPSEEK_THINKING=false
 RHYME_PROVIDERS=nwnwn,azrhymes,in-note
 RHYME_USE_MOCK=false
 # READING_USE_KUROMOJI=false  # 無効化する場合のみ
+NEXT_PUBLIC_SUPABASE_URL=...
+SUPABASE_SERVICE_ROLE_KEY=...
 ```
 
 任意: `RHYME_ALLOW_ARCHAIC=true`（全員古典韻デフォルト ON）
