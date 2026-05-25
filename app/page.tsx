@@ -23,9 +23,16 @@ import { useStudioToast } from "@/hooks/use-studio-toast";
 import { downloadLyricsTxt, downloadRhymesTxt } from "@/lib/export/exportText";
 import { appendRhymeWord } from "@/lib/insert/appendRhymeWord";
 import {
+  lyricsToPhrases,
+  normalizePhrases,
+  phrasesEqual,
+  phrasesToLyrics,
+} from "@/lib/input/phraseLyricsSync";
+import {
   DEFAULT_SETUP_DRAFT,
   loadSetupDraft,
   saveSetupDraft,
+  setupDraftToFormData,
   type SetupDraft,
 } from "@/lib/setup-draft";
 
@@ -82,7 +89,7 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [rhymeInsertTarget, setRhymeInsertTarget] =
-    useState<RhymeInsertTarget>("notepad");
+    useState<RhymeInsertTarget>("lyrics");
   const { toasts, showToast, dismissToast } = useStudioToast();
 
   useEffect(() => {
@@ -117,6 +124,19 @@ export default function HomePage() {
   useEffect(() => {
     saveSetupDraft(setupDraft);
   }, [setupDraft]);
+
+  /** フレーズ欄（1行ずつ）→ 歌詞タブへ自動反映 */
+  useEffect(() => {
+    const nextLyrics = phrasesToLyrics(setupDraft.words);
+    const inputWords = normalizePhrases(setupDraft.words);
+
+    setGeneratedLyrics((current) => {
+      if (current.trim() === nextLyrics) return current;
+      if (analysis) setLyricsDirty(true);
+      return nextLyrics;
+    });
+    setFormData((prev) => (prev ? { ...prev, inputWords } : prev));
+  }, [setupDraft.words, analysis]);
 
   const runAnalysis = useCallback(
     async (lyrics: string, data: LyricFormData | null) => {
@@ -186,18 +206,30 @@ export default function HomePage() {
   const handleApplyNotepadToLyrics = useCallback(async () => {
     if (!notepadText.trim()) return;
     const lyrics = notepadToLyrics(notepadText);
+    const phrases = lyricsToPhrases(lyrics);
+    setSetupDraft((prev) =>
+      phrasesEqual(prev.words, phrases) ? prev : { ...prev, words: phrases },
+    );
     setGeneratedLyrics(lyrics);
     setCritique(null);
     setLyricsDirty(true);
     setActiveTab("analysis");
     setMobileView("analysis");
-    await runAnalysis(lyrics, formData);
-  }, [notepadText, formData, runAnalysis]);
+    const data = formData ?? setupDraftToFormData({ ...setupDraft, words: phrases });
+    setFormData(data);
+    await runAnalysis(lyrics, data);
+  }, [notepadText, formData, setupDraft, runAnalysis]);
 
   const handleLyricsChange = useCallback((lyrics: string) => {
     setGeneratedLyrics(lyrics);
     setCritique(null);
     setLyricsDirty(true);
+    const phrases = lyricsToPhrases(lyrics);
+    setSetupDraft((prev) =>
+      phrasesEqual(prev.words, phrases) ? prev : { ...prev, words: phrases },
+    );
+    const inputWords = normalizePhrases(phrases);
+    setFormData((prev) => (prev ? { ...prev, inputWords } : prev));
   }, []);
 
   const handleReanalyze = useCallback(async () => {
@@ -279,7 +311,12 @@ export default function HomePage() {
         throw new Error(result.error ?? "歌詞生成に失敗しました");
       }
 
-      setGeneratedLyrics(result.generatedLyrics ?? "");
+      const lyrics = result.generatedLyrics ?? "";
+      const phrases = lyricsToPhrases(lyrics);
+      setGeneratedLyrics(lyrics);
+      setSetupDraft((prev) =>
+        phrasesEqual(prev.words, phrases) ? prev : { ...prev, words: phrases },
+      );
       setRhymeCandidates(result.rhymeCandidates ?? {});
       setInputPlan(result.inputPlan ?? []);
       setAnalysis(result.analysis ?? null);
@@ -440,7 +477,17 @@ export default function HomePage() {
         return;
       }
 
-      setGeneratedLyrics((prev) => appendRhymeWord(prev, word));
+      setGeneratedLyrics((prev) => {
+        const next = appendRhymeWord(prev, word);
+        const phrases = lyricsToPhrases(next);
+        setSetupDraft((d) =>
+          phrasesEqual(d.words, phrases) ? d : { ...d, words: phrases },
+        );
+        setFormData((fd) =>
+          fd ? { ...fd, inputWords: normalizePhrases(phrases) } : fd,
+        );
+        return next;
+      });
       setCritique(null);
       setLyricsDirty(true);
       showToast(`「${word}」を歌詞に追加しました`, "success");

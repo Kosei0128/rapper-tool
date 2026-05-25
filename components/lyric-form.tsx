@@ -107,8 +107,9 @@ export function LyricForm({
           <Flame className="size-4 text-primary" />
           セットアップ
         </h2>
-        <p className="text-xs text-muted-foreground mt-1">
-          単語も文章もOK。文章はそのまま入れて韻をつなぐ
+        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+          1行ずつフレーズを入力すると歌詞タブに反映され、行ごとに韻検索できます。
+          歌詞タブにまとめて貼るより、ここで1行ずつ入れるのがおすすめです。
         </p>
       </div>
 
