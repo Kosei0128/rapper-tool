@@ -64,7 +64,7 @@ export function LyricForm({
   onOpenNotepad,
 }: Props) {
   const draft = draftProp ?? DEFAULT_SETUP_DRAFT;
-  const { words, mood, format, bpmPreset, customBpm, beatsPerBar, punchlineStyle } =
+  const { words, mood, format, bpmPreset, customBpm, beatsPerBar, punchlineStyle, allowArchaicRhymes } =
     draft;
 
   const patch = (partial: Partial<SetupDraft>) =>
@@ -280,6 +280,23 @@ export function LyricForm({
             </div>
           )}
         </div>
+
+        <label className="flex items-start gap-3 rounded-xl border border-white/10 bg-black/20 px-4 py-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={allowArchaicRhymes}
+            onChange={(e) => patch({ allowArchaicRhymes: e.target.checked })}
+            disabled={isLoading}
+            className="mt-1 size-4 accent-primary shrink-0"
+          />
+          <span className="space-y-1">
+            <span className="text-sm font-medium block">古典韻候補も含める</span>
+            <span className="text-[11px] text-muted-foreground leading-relaxed block">
+              韻システム由来の「白々しきゃ」「よだちゃ」等（現代口語では古い縮約形）。
+              OFF=自然な語優先 / ON=韻探索用に表示（スコアは下位）
+            </span>
+          </span>
+        </label>
 
         <Button
           type="submit"

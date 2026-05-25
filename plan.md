@@ -1,6 +1,8 @@
 # Rapper Tool — 開発ロードマップ
 
-> 詳細要件: [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md)
+> 詳細要件: [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md)  
+> **進捗共有:** [docs/STATUS.md](docs/STATUS.md)  
+> **iPhone開発:** [docs/MOBILE_DEV.md](docs/MOBILE_DEV.md)
 
 ---
 
@@ -19,6 +21,17 @@
 - [x] メモ帳反映 → 自動分析
 - [x] 論文ベース韻品質スコア（P9-3 参考）
 - [x] LLMプロンプト改善（5モーラ脚韻・行長・反復禁止）
+- [x] iPhone UI（下部タブ・safe area）
+- [x] GitHub + Vercel デプロイ
+- [x] 古典語ハックフィルタ + Setup 任意ON
+- [x] 共有ドキュメント（STATUS / MOBILE_DEV / RHYME_FILTER）
+
+---
+
+## Phase 1.5 — デプロイ済み・push 待ちの可能性 🚢
+
+- [ ] 古典韻フィルタ + チェックボックスの本番反映確認
+- [ ] 友人フィードバック（iPhone Safari）
 
 ---
 

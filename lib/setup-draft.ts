@@ -7,6 +7,8 @@ export type LyricFormData = {
   bpm?: number;
   beatsPerBar: number;
   punchlineStyle: PunchlineStyle;
+  /** 古典語ハック韻（白々しきゃ等）を候補に含める */
+  allowArchaicRhymes: boolean;
 };
 
 export type SetupDraft = {
@@ -17,6 +19,7 @@ export type SetupDraft = {
   customBpm: string;
   beatsPerBar: string;
   punchlineStyle: PunchlineStyle;
+  allowArchaicRhymes: boolean;
 };
 
 export const SETUP_STORAGE_KEY = "rapper-tool-setup";
@@ -29,6 +32,7 @@ export const DEFAULT_SETUP_DRAFT: SetupDraft = {
   customBpm: "",
   beatsPerBar: "4",
   punchlineStyle: "default",
+  allowArchaicRhymes: false,
 };
 
 export function loadSetupDraft(): SetupDraft {
@@ -77,5 +81,6 @@ export function setupDraftToFormData(draft: SetupDraft): LyricFormData {
     bpm: resolveBpm(draft),
     beatsPerBar: parseInt(draft.beatsPerBar, 10) || 4,
     punchlineStyle: draft.punchlineStyle,
+    allowArchaicRhymes: draft.allowArchaicRhymes,
   };
 }

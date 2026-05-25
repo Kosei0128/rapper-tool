@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
       typeof body.structureHint === "string" && body.structureHint.trim()
         ? body.structureHint.trim()
         : undefined;
+    const allowArchaicRhymes = body.allowArchaicRhymes === true;
 
     if (!Array.isArray(inputWords) || inputWords.length === 0) {
       return NextResponse.json(
@@ -92,6 +93,7 @@ export async function POST(request: NextRequest) {
       body.rhymeCandidates ??
       (await getRhymesForWords(
         collectRhymeLookupWords(parseInputPhrases(inputWords)),
+        { allowArchaicRhymes },
       ));
 
     const inputPlan = parseInputPhrases(inputWords);
@@ -106,6 +108,7 @@ export async function POST(request: NextRequest) {
       beatsPerBar,
       punchlineStyle,
       structureHint,
+      allowArchaicRhymes,
     });
 
     const analysis = await analyzeLyrics(generatedLyrics, {

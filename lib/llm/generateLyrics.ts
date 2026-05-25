@@ -37,9 +37,14 @@ const PUNCHLINE_STYLE: Record<PunchlineStyle, string> = {
 function formatRhymeList(
   candidates: RhymeCandidate[],
   queryWord?: string,
+  allowArchaicRhymes?: boolean,
 ): string {
   const valid = candidates.filter(
-    (c) => !isLikelyInvalidRhymeWord(c.word, { queryWord }),
+    (c) =>
+      !isLikelyInvalidRhymeWord(c.word, {
+        queryWord,
+        allowArchaicRhymes,
+      }),
   );
   if (valid.length === 0) return "（候補なし）";
   return valid
@@ -54,6 +59,7 @@ function formatRhymeList(
 function formatInputPlanSection(
   inputPlan: InputPhrasePlan[],
   rhymeCandidates: Record<string, RhymeCandidate[]> | undefined,
+  allowArchaicRhymes?: boolean,
 ): string {
   if (!inputPlan.length) return "（入力なし）";
 
@@ -70,7 +76,7 @@ function formatInputPlanSection(
           .map((kw) => {
             const cands = rhymeCandidates?.[kw] ?? [];
             return cands.length > 0
-              ? `「${kw}」韻: ${formatRhymeList(cands, kw)}`
+              ? `「${kw}」韻: ${formatRhymeList(cands, kw, allowArchaicRhymes)}`
               : null;
           })
           .filter(Boolean)
@@ -80,7 +86,7 @@ function formatInputPlanSection(
           `${i + 1}. 【文章】「${plan.original}」`,
           `   → この一文を歌詞の1行として**そのまま**（または意味・語順を保って）含める`,
           `   → この行の**直後から**、韻軸「${plan.primaryRhymeWord}」の韻を踏む`,
-          `   → 韻候補: ${formatRhymeList(primaryRhymes, plan.primaryRhymeWord)}`,
+          `   → 韻候補: ${formatRhymeList(primaryRhymes, plan.primaryRhymeWord, allowArchaicRhymes)}`,
           extraRhymes ? `   → ${extraRhymes}` : null,
         ]
           .filter(Boolean)
@@ -90,7 +96,7 @@ function formatInputPlanSection(
       return [
         `${i + 1}. 【単語】「${plan.original}」`,
         `   → ストーリーに自然に織り込む`,
-        `   → 韻軸「${plan.primaryRhymeWord}」の韻候補: ${formatRhymeList(primaryRhymes, plan.primaryRhymeWord)}`,
+        `   → 韻軸「${plan.primaryRhymeWord}」の韻候補: ${formatRhymeList(primaryRhymes, plan.primaryRhymeWord, allowArchaicRhymes)}`,
       ].join("\n");
     })
     .join("\n\n");
@@ -112,6 +118,7 @@ export async function generateLyrics(
     beatsPerBar = 4,
     punchlineStyle = "default",
     structureHint,
+    allowArchaicRhymes,
   } = request;
 
   const moodLabel = MOOD_LABELS[mood];
@@ -124,6 +131,7 @@ export async function generateLyrics(
       primaryRhymeWord: w,
     })),
     rhymeCandidates,
+    allowArchaicRhymes,
   );
 
   const hasPhrases = (inputPlan ?? []).some((p) => p.isPhrase);
@@ -174,7 +182,9 @@ export async function generateLyrics(
 - BPM指定時は1行あたりのモーラ数（音節数）を揃える
 - **脚韻品質**: 行末5モーラ前後の母音列が響く脚韻を優先（単語1つだけでなく複数語にまたがってもよい）
 - **行長**: 1行8〜16モーラ目安、隣接行のモーラ差は4以内
-- **禁止**: 行末5文字の表層をコピペして見かけだけの韻にしない
+- **禁止**: 韻辞書の古典語縮約（白々しきゃ、かんばしりゃ、よだちゃ 等）をそのまま行末に使わない${allowArchaicRhymes ? "（※古典韻モードONだが、意味が通じない語は避ける）" : ""}
+- **口語OK**: なきゃ、拝みゃ、〜とばしゃ 等、話し言葉として通じる縮約のみ
+- 行末は「〜せば/〜れば」や自然な口語（なきゃ、じゃ）を優先する
 ${phraseRules}`;
 
   const userPrompt = `以下の条件で歌詞を書いてください。

@@ -5,6 +5,8 @@ import { getRhymesFromInNote } from "./inNoteProvider";
 import { getRhymesFromKujirahand } from "./kujirahandProvider";
 import { getRhymesFromNwnwn } from "./nwnwnProvider";
 import { rankRhymeCandidates } from "../rankRhymes";
+import type { RhymeFetchOptions } from "../rhymeOptions";
+import { resolveAllowArchaicRhymes } from "../rhymeOptions";
 import {
   dedupeRhymeCandidates,
   enrichRhymeReadings,
@@ -46,8 +48,12 @@ export function createCompositeProvider(
   chain: RhymeProviderName[],
 ): RhymeProvider {
   return {
-    async getRhymes(word: string): Promise<RhymeCandidate[]> {
+    async getRhymes(
+      word: string,
+      options?: RhymeFetchOptions,
+    ): Promise<RhymeCandidate[]> {
       const maxTotal = Number(process.env.RHYME_MAX_CANDIDATES ?? 24);
+      const allowArchaic = resolveAllowArchaicRhymes(options?.allowArchaicRhymes);
       const seen = new Set<string>();
       const merged: RhymeCandidate[] = [];
 
@@ -91,7 +97,9 @@ export function createCompositeProvider(
       const enriched = await enrichRhymeReadings(ranked.slice(0, 32));
       const rest = ranked.slice(32);
       const deduped = dedupeRhymeCandidates([...enriched, ...rest]);
-      const filtered = await filterRhymeCandidates(deduped, word);
+      const filtered = await filterRhymeCandidates(deduped, word, {
+        allowArchaicRhymes: allowArchaic,
+      });
       return filtered.slice(0, maxTotal);
     },
   };

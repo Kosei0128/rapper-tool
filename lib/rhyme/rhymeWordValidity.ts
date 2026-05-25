@@ -1,10 +1,54 @@
 const KATAKANA_ONLY = /^[ァ-ヴー・]+$/u;
 
+/** 古典語・韻辞書の「仮定形＋ゃ」縮約（白々しきゃ、かんばしりゃ 等） */
+const ARCHAIC_CONDITIONAL_SUFFIX =
+  /(?:しきゃ|がましきゃ|たらしきゃ|ばしりゃ|齧りゃ|かじりゃ|わしきゃ|うわしきゃ|がまし|得りゃ)$/u;
+
+/** 口語として許容する短い末尾（拝みゃ、生まれなきゃ 等） */
+const NATURAL_COLLOQUIAL_END =
+  /(?:なきゃ|なくちゃ|ないと|じゃ|ちゃ|よ|さ|ね|か|だ|わ)$/u;
+
+const KNOWN_OBSCURE_RHYME_HACKS = new Set([
+  "よだちゃ",
+  "かんばしりゃ",
+  "ひとがましきゃ",
+  "烏滸がましきゃ",
+  "厭わしきゃ",
+  "聞き齧りゃ",
+  "退かしゃ",
+  "おどろかしゃ",
+]);
+
+const ALLOWED_COLLOQUIAL_RHYMES = new Set([
+  "拝みゃ",
+  "窄まりゃ",
+  "伸ばしゃ",
+  "殴りとばしゃ",
+  "閉ざしゃ",
+  "おどかしゃ",
+]);
+
+/** 韻APIが返す「韻は踏めるが現代口語では不自然」な語 */
+export function isArchaicRhymeHackWord(word: string): boolean {
+  const w = word.trim();
+  if (!w || w.length < 3) return false;
+  if (ALLOWED_COLLOQUIAL_RHYMES.has(w)) return false;
+  if (KNOWN_OBSCURE_RHYME_HACKS.has(w)) return true;
+  if (NATURAL_COLLOQUIAL_END.test(w)) return false;
+  if (w.length <= 5 && /(?:みゃ|まりゃ|ばしゃ|とばしゃ)$/.test(w)) return false;
+  if (ARCHAIC_CONDITIONAL_SUFFIX.test(w)) return true;
+  // 長い漢語 + しゃ/しきゃ/りゃ（韻システムの古典縮約）
+  if (w.length >= 5 && /[一-龥]{2,}(?:しきゃ|しゃ|りゃ)$/.test(w)) return true;
+  return false;
+}
+
 export type RhymeWordValidityOptions = {
   /** 韻検索の入力語（これ自体は有効） */
   queryWord?: string;
   /** ユーザー入力語（歌詞分析で有効扱い） */
   allowedWords?: string[];
+  /** true なら古典語ハック（白々しきゃ等）を候補に残す */
+  allowArchaicRhymes?: boolean;
 };
 
 /** 韻候補・分析トークンとして明らかに無効な語 */
@@ -19,6 +63,7 @@ export function isLikelyInvalidRhymeWord(
   let w = word.trim();
 
   if (allowedWords.includes(w)) return false;
+  if (!opts.allowArchaicRhymes && isArchaicRhymeHackWord(w)) return true;
 
   for (let depth = 0; depth < 4; depth++) {
     if (!w || w.length < 2) return true;
@@ -63,8 +108,13 @@ export function isLikelyInvalidRhymeWord(
 export function filterInvalidRhymeWords(
   candidates: { word: string }[],
   queryWord: string,
+  options?: Pick<RhymeWordValidityOptions, "allowArchaicRhymes">,
 ): { word: string }[] {
   return candidates.filter(
-    (c) => !isLikelyInvalidRhymeWord(c.word, { queryWord }),
+    (c) =>
+      !isLikelyInvalidRhymeWord(c.word, {
+        queryWord,
+        allowArchaicRhymes: options?.allowArchaicRhymes,
+      }),
   );
 }

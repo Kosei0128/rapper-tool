@@ -1,4 +1,6 @@
 /** 韻候補の取得元 */
+import type { RhymeFetchOptions } from "./rhymeOptions";
+
 export type RhymeSource =
   | "nwnwn"
   | "azrhymes"
@@ -69,6 +71,8 @@ export type GenerateLyricsRequest = {
   punchlineStyle?: PunchlineStyle;
   /** メモ帳の --hook / --verse 等から得た曲構成ヒント */
   structureHint?: string;
+  /** 古典語ハック韻（白々しきゃ等）を候補に含める */
+  allowArchaicRhymes?: boolean;
 };
 
 /** 韻検索APIのレスポンス（単語ごと） */
@@ -79,7 +83,7 @@ export type RhymeSearchResult = {
 
 /** 外部韻APIプロバイダーのインターフェース（差し替え用） */
 export type RhymeProvider = {
-  getRhymes: (word: string) => Promise<RhymeCandidate[]>;
+  getRhymes: (word: string, options?: RhymeFetchOptions) => Promise<RhymeCandidate[]>;
 };
 
 /** Supabase保存用の生成履歴型 */

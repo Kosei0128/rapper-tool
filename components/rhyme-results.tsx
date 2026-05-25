@@ -8,13 +8,14 @@ import {
   dedupeRhymeCandidates,
   highlightPhraseAnchor,
 } from "@/lib/rhyme/dedupeRhymes";
-import { isLikelyInvalidRhymeWord } from "@/lib/rhyme/rhymeWordValidity";
+import { isLikelyInvalidRhymeWord, isArchaicRhymeHackWord } from "@/lib/rhyme/rhymeWordValidity";
 import type { InputPhrasePlan, RhymeCandidate, RhymeSource } from "@/lib/rhyme/types";
 
 type Props = {
   rhymeCandidates: Record<string, RhymeCandidate[]>;
   inputPlan?: InputPhrasePlan[];
   isLoading: boolean;
+  allowArchaicRhymes?: boolean;
 };
 
 const SOURCE_LABEL: Record<RhymeSource, string> = {
@@ -103,6 +104,11 @@ function InputCard({
                   title={[c.reading, c.vowels].filter(Boolean).join(" / ")}
                 >
                   <span className="text-sm font-medium truncate">{c.word}</span>
+                  {isArchaicRhymeHackWord(c.word) && (
+                    <span className="text-[9px] text-accent/90 uppercase tracking-wide">
+                      古典韻
+                    </span>
+                  )}
                   <div className="flex items-center justify-between gap-1 text-[10px] text-muted-foreground">
                     <span className="truncate">
                       {c.reading ? c.reading : c.vowels ?? "—"}
@@ -150,6 +156,7 @@ export function RhymeResults({
   rhymeCandidates,
   inputPlan,
   isLoading,
+  allowArchaicRhymes = false,
 }: Props) {
   const hasPlan = inputPlan && inputPlan.length > 0;
 
@@ -163,6 +170,7 @@ export function RhymeResults({
           (c) =>
             !isLikelyInvalidRhymeWord(c.word, {
               queryWord: plan.primaryRhymeWord,
+              allowArchaicRhymes,
             }),
         ),
       }));
@@ -175,7 +183,11 @@ export function RhymeResults({
         primaryRhymeWord: word,
       } satisfies InputPhrasePlan,
       candidates: dedupeRhymeCandidates(list).filter(
-        (c) => !isLikelyInvalidRhymeWord(c.word, { queryWord: word }),
+        (c) =>
+          !isLikelyInvalidRhymeWord(c.word, {
+            queryWord: word,
+            allowArchaicRhymes,
+          }),
       ),
     }));
   }, [hasPlan, inputPlan, rhymeCandidates]);

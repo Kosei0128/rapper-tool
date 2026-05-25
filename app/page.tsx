@@ -462,6 +462,7 @@ export default function HomePage() {
                 rhymeCandidates={rhymeCandidates}
                 inputPlan={inputPlan}
                 isLoading={isLoading}
+                allowArchaicRhymes={setupDraft.allowArchaicRhymes}
               />
             )}
             {activeTab === "analysis" && (
