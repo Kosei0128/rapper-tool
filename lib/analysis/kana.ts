@@ -5,9 +5,20 @@ export function toHiragana(text: string): string {
   );
 }
 
-/** テキストがかな主体か */
+const KANJI_RE = /[\u4e00-\u9fff\u3400-\u4dbf々]/u;
+
+/** 漢字を含むか（読み解決に kuromoji が必要） */
+export function hasKanji(text: string): boolean {
+  return KANJI_RE.test(text);
+}
+
+/**
+ * テキストがかな主体か（漢字なし・読み変換不要な入力向け）。
+ * 漢字が1文字でもあれば false — ひらがな比率だけで kuromoji をスキップしない。
+ */
 export function isMostlyKana(text: string): boolean {
   if (!text) return false;
+  if (hasKanji(text)) return false;
   const kana = text.match(/[\u3040-\u309f\u30a0-\u30ff]/g)?.length ?? 0;
   return kana / text.length >= 0.5;
 }
