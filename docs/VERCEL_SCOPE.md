@@ -11,21 +11,20 @@
 | **韻だけ取得** | 歌詞生成なしで `/api/rhymes` |
 | 韻分析 | 行末韻・内部韻・モーラ・密度 |
 | 古典語ハックフィルタ | デフォルト OFF、Setup で ON 可 |
-| 読み仮名表示 | nwnwn ベース（kuromoji は Phase 2） |
+| 読み仮名表示 | **kuromoji**（サーバー側）+ nwnwn フォールバック |
 | iPhone UI | 下部タブ・safe area |
 | ローカルプロジェクト保存 | localStorage |
 | **完了トースト** | 生成・韻取得・分析・保存 |
 | **TXT エクスポート** | 歌詞・韻候補 |
+| **韻候補タップ→挿入** | メモ帳 / 歌詞 |
+| **PWA** | ホーム画面追加（manifest + icon） |
 | GitHub 連携デプロイ | push → 自動反映 |
 
 ## 🔜 Vercel で可能（未実装）
 
 | 機能 | 手段 |
 |------|------|
-| kuromoji 読み精度 | npm パッケージ（辞書サイズに注意） |
-| 韻候補クリック→挿入 | フロントのみ |
 | Supabase クラウド保存 | env 設定のみ |
-| PWA（ホーム画面追加） | manifest + icons |
 
 ## ❌ VPS が必要 / 向かない
 
@@ -43,6 +42,7 @@ DEEPSEEK_MODEL=deepseek-v4-pro
 DEEPSEEK_THINKING=false
 RHYME_PROVIDERS=nwnwn,azrhymes,in-note
 RHYME_USE_MOCK=false
+# READING_USE_KUROMOJI=false  # 無効化する場合のみ
 ```
 
 任意: `RHYME_ALLOW_ARCHAIC=true`（全員古典韻デフォルト ON）

@@ -35,7 +35,7 @@
 | 機能 | 状態 |
 |------|------|
 | クラウド保存 | Supabase API あり（未設定） |
-| MeCab / kuromoji | 未実装（読み精度向上用） |
+| MeCab / kuromoji | **kuromoji 実装済**（Vercel サーバー側） |
 | 古典韻フィルタ本番 | コード済み、push 待ちの可能性あり |
 
 ### ❌ 未実装

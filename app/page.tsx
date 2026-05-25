@@ -5,7 +5,7 @@ import { AlertCircle, Zap } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { LyricForm, type LyricFormData } from "@/components/lyric-form";
 import { LyricNotepad } from "@/components/lyric-notepad";
-import { RhymeResults } from "@/components/rhyme-results";
+import { RhymeResults, type RhymeInsertTarget } from "@/components/rhyme-results";
 import { GeneratedLyrics } from "@/components/generated-lyrics";
 import { LyricAnalysisPanel } from "@/components/lyric-analysis";
 import { ProjectPanel } from "@/components/project-panel";
@@ -21,6 +21,7 @@ import type { InputPhrasePlan, RhymeCandidate } from "@/lib/rhyme/types";
 import { StudioToastStack } from "@/components/studio-toast-stack";
 import { useStudioToast } from "@/hooks/use-studio-toast";
 import { downloadLyricsTxt, downloadRhymesTxt } from "@/lib/export/exportText";
+import { appendRhymeWord } from "@/lib/insert/appendRhymeWord";
 import {
   DEFAULT_SETUP_DRAFT,
   loadSetupDraft,
@@ -29,6 +30,7 @@ import {
 } from "@/lib/setup-draft";
 
 const NOTEPAD_STORAGE_KEY = "rapper-tool-notepad";
+const RHYME_INSERT_TARGET_KEY = "rapper-tool-rhyme-insert-target";
 
 const MOOD_LABELS: Record<string, string> = {
   street: "ストリート",
@@ -79,12 +81,30 @@ export default function HomePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [rhymeInsertTarget, setRhymeInsertTarget] =
+    useState<RhymeInsertTarget>("notepad");
   const { toasts, showToast, dismissToast } = useStudioToast();
 
   useEffect(() => {
     setNotepadText(loadNotepadFromStorage());
     setSetupDraft(loadSetupDraft());
+    try {
+      const saved = localStorage.getItem(RHYME_INSERT_TARGET_KEY);
+      if (saved === "notepad" || saved === "lyrics") {
+        setRhymeInsertTarget(saved);
+      }
+    } catch {
+      // ignore
+    }
   }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(RHYME_INSERT_TARGET_KEY, rhymeInsertTarget);
+    } catch {
+      // ignore
+    }
+  }, [rhymeInsertTarget]);
 
   useEffect(() => {
     try {
@@ -412,6 +432,22 @@ export default function HomePage() {
     showToast(`「${project.name}」を読み込みました`, "info");
   }, [showToast]);
 
+  const handleInsertRhyme = useCallback(
+    (word: string) => {
+      if (rhymeInsertTarget === "notepad") {
+        setNotepadText((prev) => appendRhymeWord(prev, word));
+        showToast(`「${word}」をメモ帳に追加しました`, "success");
+        return;
+      }
+
+      setGeneratedLyrics((prev) => appendRhymeWord(prev, word));
+      setCritique(null);
+      setLyricsDirty(true);
+      showToast(`「${word}」を歌詞に追加しました`, "success");
+    },
+    [rhymeInsertTarget, showToast],
+  );
+
   const hasLyrics = Boolean(generatedLyrics);
   const hasRhymes = Object.values(rhymeCandidates).some((list) => list.length > 0);
 
@@ -536,6 +572,9 @@ export default function HomePage() {
                 inputPlan={inputPlan}
                 isLoading={isLoading || isFetchingRhymes}
                 allowArchaicRhymes={setupDraft.allowArchaicRhymes}
+                insertTarget={rhymeInsertTarget}
+                onInsertTargetChange={setRhymeInsertTarget}
+                onInsertRhyme={handleInsertRhyme}
                 onExportTxt={() => {
                   if (!hasRhymes) return;
                   downloadRhymesTxt(rhymeCandidates);

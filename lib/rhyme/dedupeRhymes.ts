@@ -1,5 +1,5 @@
 import { toHiragana } from "@/lib/analysis/kana";
-import { lookupWordFromNwnwn } from "./providers/nwnwnProvider";
+import { lookupReading } from "@/lib/reading/lookupReading";
 import type { RhymeCandidate } from "./types";
 
 /** 韻候補の同一判定キー（読み優先 → ひらがな化） */
@@ -64,8 +64,8 @@ export async function enrichRhymeReadings(
     target.map(async (c) => {
       if (c.reading?.trim()) return c;
       try {
-        const lookup = await lookupWordFromNwnwn(c.word);
-        if (lookup?.reading) {
+        const lookup = await lookupReading(c.word);
+        if (lookup.reading && lookup.source !== "fallback") {
           return {
             ...c,
             reading: lookup.reading,

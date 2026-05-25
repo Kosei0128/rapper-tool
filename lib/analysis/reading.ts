@@ -1,59 +1,32 @@
-import { lookupWordFromNwnwn } from "@/lib/rhyme/providers/nwnwnProvider";
-import {
-  countMoras,
-  isMostlyKana,
-  toHiragana,
-  vowelsFromReading,
-} from "./kana";
+import { countMoras, isMostlyKana, toHiragana } from "./kana";
+import { lookupLineReading, lookupReading } from "@/lib/reading/lookupReading";
 import type { WordAnalysis } from "./types";
 
-const cache = new Map<string, WordAnalysis>();
+const wordCache = new Map<string, WordAnalysis>();
 
 /** 歌詞中の読み仮名注釈を除去 */
 export function stripReadingAnnotations(text: string): string {
   return text.replace(/（[^）]*）/g, "").replace(/\([^)]*\)/g, "").trim();
 }
 
-/** 1語の読み・母音・モーラを解決（キャッシュ付き） */
+/** 1語の読み・母音・モーラを解決（kuromoji → nwnwn、キャッシュ付き） */
 export async function resolveWord(surface: string): Promise<WordAnalysis> {
   const key = surface.trim();
   if (!key) {
     return { surface: "", reading: "", vowels: "", moras: 0 };
   }
 
-  const cached = cache.get(key);
+  const cached = wordCache.get(key);
   if (cached) return cached;
 
-  let reading = "";
-  let vowels = "";
-
-  if (isMostlyKana(key)) {
-    reading = toHiragana(key);
-    vowels = vowelsFromReading(reading);
-  } else {
-    try {
-      const lookup = await lookupWordFromNwnwn(key);
-      if (lookup?.reading) {
-        reading = toHiragana(lookup.reading);
-        vowels = lookup.vowels ?? vowelsFromReading(reading);
-      }
-    } catch {
-      // nwnwn 失敗時は表面形から推定
-    }
-  }
-
-  if (!reading) {
-    reading = key;
-    vowels = vowelsFromReading(reading);
-  }
-
+  const lookup = await lookupReading(key);
   const result: WordAnalysis = {
     surface: key,
-    reading,
-    vowels,
-    moras: countMoras(reading),
+    reading: lookup.reading,
+    vowels: lookup.vowels,
+    moras: countMoras(lookup.reading),
   };
-  cache.set(key, result);
+  wordCache.set(key, result);
   return result;
 }
 
@@ -118,6 +91,20 @@ export function lineReadingFromTokens(
   if (fromTokens) return fromTokens;
 
   return toHiragana(cleaned);
+}
+
+/** kuromoji で行全体の読みを解決（失敗時は token 合成へ） */
+export async function resolveLineReading(
+  text: string,
+  fallbackTokens: WordAnalysis[],
+): Promise<string> {
+  const cleaned = stripReadingAnnotations(text);
+  if (!cleaned) return "";
+
+  const lineReading = await lookupLineReading(cleaned);
+  if (lineReading) return lineReading;
+
+  return lineReadingFromTokens(text, fallbackTokens);
 }
 
 /** 行末の韻単位（末尾2〜5文字の意味のある塊） */

@@ -2,7 +2,7 @@ import { isLikelyInvalidRhymeWord } from "@/lib/rhyme/rhymeWordValidity";
 import { tailMatchScore, vowelTail } from "./kana";
 import {
   extractEndUnit,
-  lineReadingFromTokens,
+  resolveLineReading,
   resolveWord,
   tokenizeLine,
 } from "./reading";
@@ -175,11 +175,12 @@ export async function analyzeLyrics(
     const tokenSurfaces = tokenizeLine(text);
     const tokens = await Promise.all(tokenSurfaces.map(resolveWord));
     const moras = tokens.reduce((s, t) => s + t.moras, 0) || endWord.moras;
+    const reading = await resolveLineReading(text, tokens);
 
     lines.push({
       index: i,
       text,
-      reading: lineReadingFromTokens(text, tokens),
+      reading,
       endUnit,
       endReading: endWord.reading,
       endVowels: endWord.vowels,

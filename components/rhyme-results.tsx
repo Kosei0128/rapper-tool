@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Sparkles, ChevronDown, ChevronUp, Download } from "lucide-react";
+import { Sparkles, ChevronDown, ChevronUp, Download, NotebookPen, Mic2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,12 +10,18 @@ import {
 } from "@/lib/rhyme/dedupeRhymes";
 import { isLikelyInvalidRhymeWord, isArchaicRhymeHackWord } from "@/lib/rhyme/rhymeWordValidity";
 import type { InputPhrasePlan, RhymeCandidate, RhymeSource } from "@/lib/rhyme/types";
+import { cn } from "@/lib/utils";
+
+export type RhymeInsertTarget = "notepad" | "lyrics";
 
 type Props = {
   rhymeCandidates: Record<string, RhymeCandidate[]>;
   inputPlan?: InputPhrasePlan[];
   isLoading: boolean;
   allowArchaicRhymes?: boolean;
+  insertTarget?: RhymeInsertTarget;
+  onInsertTargetChange?: (target: RhymeInsertTarget) => void;
+  onInsertRhyme?: (word: string) => void;
   onExportTxt?: () => void;
 };
 
@@ -32,9 +38,11 @@ const INITIAL_SHOW = 16;
 function InputCard({
   plan,
   candidates,
+  onInsertRhyme,
 }: {
   plan: InputPhrasePlan;
   candidates: RhymeCandidate[];
+  onInsertRhyme?: (word: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const visible = expanded ? candidates : candidates.slice(0, INITIAL_SHOW);
@@ -99,10 +107,17 @@ function InputCard({
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
               {visible.map((c) => (
-                <div
+                <button
+                  type="button"
                   key={`${c.word}-${c.source}-${c.reading ?? ""}`}
-                  className="flex flex-col gap-0.5 px-3 py-2.5 rounded-xl border border-white/10 bg-black/30 hover:border-primary/30 transition-colors"
-                  title={[c.reading, c.vowels].filter(Boolean).join(" / ")}
+                  onClick={() => onInsertRhyme?.(c.word)}
+                  disabled={!onInsertRhyme}
+                  className="flex flex-col gap-0.5 px-3 py-2.5 rounded-xl border border-white/10 bg-black/30 hover:border-primary/40 hover:bg-primary/10 active:scale-[0.98] transition-all text-left disabled:cursor-default disabled:hover:border-white/10 disabled:hover:bg-black/30 disabled:active:scale-100"
+                  title={
+                    onInsertRhyme
+                      ? `タップで「${c.word}」を挿入 — ${[c.reading, c.vowels].filter(Boolean).join(" / ")}`
+                      : [c.reading, c.vowels].filter(Boolean).join(" / ")
+                  }
                 >
                   <span className="text-sm font-medium truncate">{c.word}</span>
                   {isArchaicRhymeHackWord(c.word) && (
@@ -123,7 +138,7 @@ function InputCard({
                   <span className="text-[9px] uppercase tracking-wide text-muted-foreground/70">
                     {SOURCE_LABEL[c.source]}
                   </span>
-                </div>
+                </button>
               ))}
             </div>
             {candidates.length > INITIAL_SHOW && (
@@ -158,6 +173,9 @@ export function RhymeResults({
   inputPlan,
   isLoading,
   allowArchaicRhymes = false,
+  insertTarget = "notepad",
+  onInsertTargetChange,
+  onInsertRhyme,
   onExportTxt,
 }: Props) {
   const hasPlan = inputPlan && inputPlan.length > 0;
@@ -209,8 +227,43 @@ export function RhymeResults({
               </h2>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              入力した言葉・文章ごとに韻を表示。文章は末尾の韻軸語で検索します。
+              入力した言葉・文章ごとに韻を表示。候補をタップで挿入できます。
             </p>
+            {onInsertRhyme && onInsertTargetChange && (
+              <div className="flex items-center gap-1.5 mt-3">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide shrink-0">
+                  挿入先
+                </span>
+                <div className="flex rounded-lg border border-white/10 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => onInsertTargetChange("notepad")}
+                    className={cn(
+                      "flex items-center gap-1 px-2.5 py-1.5 text-[11px] transition-colors",
+                      insertTarget === "notepad"
+                        ? "bg-primary/20 text-primary"
+                        : "bg-black/20 text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <NotebookPen className="size-3" />
+                    メモ帳
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onInsertTargetChange("lyrics")}
+                    className={cn(
+                      "flex items-center gap-1 px-2.5 py-1.5 text-[11px] transition-colors border-l border-white/10",
+                      insertTarget === "lyrics"
+                        ? "bg-primary/20 text-primary"
+                        : "bg-black/20 text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <Mic2 className="size-3" />
+                    歌詞
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           {onExportTxt && hasAnyRhymes && !isLoading && (
             <Button
@@ -243,6 +296,7 @@ export function RhymeResults({
                 key={plan.original}
                 plan={plan}
                 candidates={candidates}
+                onInsertRhyme={onInsertRhyme}
               />
             ))}
           </div>

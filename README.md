@@ -9,7 +9,7 @@
 - DeepSeek による歌詞生成
 - 韻密度・フロー・母音分析
 - メモ帳（`--hook` / `--verse` タグ）
-- 歌詞手動編集 + 読み仮名表示
+- 歌詞手動編集 + 読み仮名表示（**kuromoji** 形態素解析）
 - ローカルプロジェクト保存
 
 ## ドキュメント
@@ -42,6 +42,7 @@ http://localhost:3000
 | `RHYME_PROVIDERS` | - | 例: `nwnwn,azrhymes,in-note` |
 | `RHYME_USE_MOCK` | - | `true` でモックのみ |
 | `RHYME_MAX_CANDIDATES` | - | デフォルト 24 |
+| `READING_USE_KUROMOJI` | - | デフォルト ON。`false` で nwnwn のみ |
 | Supabase 系 | - | クラウド保存を使う場合のみ |
 
 ## Vercel へのデプロイ

@@ -1,5 +1,5 @@
 import type { RhymeCandidate, RhymeProvider, RhymeProviderName } from "../types";
-import { lookupWordFromNwnwn } from "./nwnwnProvider";
+import { lookupReading } from "@/lib/reading/lookupReading";
 import { getRhymesFromAzrhymes } from "./azrhymesProvider";
 import { getRhymesFromInNote } from "./inNoteProvider";
 import { getRhymesFromKujirahand } from "./kujirahandProvider";
@@ -60,8 +60,8 @@ export function createCompositeProvider(
       // 入力語の母音（スコアリング用）
       let queryVowels: string | undefined;
       try {
-        const lookup = await lookupWordFromNwnwn(word);
-        queryVowels = lookup?.vowels;
+        const lookup = await lookupReading(word);
+        queryVowels = lookup.vowels;
       } catch {
         // スコアリングのみなので続行
       }
