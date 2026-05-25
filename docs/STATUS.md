@@ -62,7 +62,7 @@
 | [STATUS.md](./STATUS.md) | **このファイル（進捗）** |
 | [MOBILE_DEV.md](./MOBILE_DEV.md) | iPhone から開発を進める方法 |
 | [RHYME_FILTER.md](./RHYME_FILTER.md) | 古典語ハックフィルタの意味 |
-| [plan.md](../plan.md) | Phase 1〜5 ロードマップ |
+| [VERCEL_SCOPE.md](./VERCEL_SCOPE.md) | Vercel でできること一覧 |
 
 ---
 

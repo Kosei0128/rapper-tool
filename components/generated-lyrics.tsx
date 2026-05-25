@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, Check, Save, Mic2, Pencil, BarChart3 } from "lucide-react";
+import { Copy, Check, Save, Mic2, Pencil, BarChart3, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { LineAnalysis } from "@/lib/analysis/types";
@@ -18,6 +18,7 @@ type Props = {
   saveMessage: string | null;
   isLoading?: boolean;
   isDirty?: boolean;
+  onExportTxt?: () => void;
 };
 
 export function GeneratedLyrics({
@@ -32,6 +33,7 @@ export function GeneratedLyrics({
   saveMessage,
   isLoading,
   isDirty,
+  onExportTxt,
 }: Props) {
   const [copied, setCopied] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -123,6 +125,17 @@ export function GeneratedLyrics({
                   {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
                   {copied ? "コピー済" : "コピー"}
                 </Button>
+                {onExportTxt && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onExportTxt}
+                    className="border-white/10 bg-white/5 hover:bg-white/10"
+                  >
+                    <Download className="size-4" />
+                    TXT
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"

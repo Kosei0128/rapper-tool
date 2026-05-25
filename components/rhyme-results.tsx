@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { Sparkles, ChevronDown, ChevronUp, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +16,7 @@ type Props = {
   inputPlan?: InputPhrasePlan[];
   isLoading: boolean;
   allowArchaicRhymes?: boolean;
+  onExportTxt?: () => void;
 };
 
 const SOURCE_LABEL: Record<RhymeSource, string> = {
@@ -157,8 +158,10 @@ export function RhymeResults({
   inputPlan,
   isLoading,
   allowArchaicRhymes = false,
+  onExportTxt,
 }: Props) {
   const hasPlan = inputPlan && inputPlan.length > 0;
+  const hasAnyRhymes = Object.values(rhymeCandidates).some((l) => l.length > 0);
 
   const cards = useMemo(() => {
     if (hasPlan) {
@@ -197,15 +200,30 @@ export function RhymeResults({
   return (
     <div className="studio-panel h-full min-h-0 flex flex-col">
       <div className="px-5 py-4 border-b border-white/10 shrink-0">
-        <div className="flex items-center gap-2">
-          <Sparkles className="size-5 text-accent" />
-          <h2 className="font-display text-lg font-bold tracking-wider uppercase">
-            韻候補
-          </h2>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <Sparkles className="size-5 text-accent" />
+              <h2 className="font-display text-lg font-bold tracking-wider uppercase">
+                韻候補
+              </h2>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              入力した言葉・文章ごとに韻を表示。文章は末尾の韻軸語で検索します。
+            </p>
+          </div>
+          {onExportTxt && hasAnyRhymes && !isLoading && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onExportTxt}
+              className="shrink-0 border-white/10 bg-white/5 hover:bg-white/10"
+            >
+              <Download className="size-4" />
+              TXT
+            </Button>
+          )}
         </div>
-        <p className="text-xs text-muted-foreground mt-1">
-          入力した言葉・文章ごとに韻を表示。文章は末尾の韻軸語で検索します。
-        </p>
       </div>
 
       <div className="flex-1 p-5 overflow-y-auto">
@@ -216,7 +234,7 @@ export function RhymeResults({
           </div>
         ) : isEmpty ? (
           <p className="text-sm text-muted-foreground text-center py-12">
-            Generate を押すと韻候補が表示されます
+            「生成」または「韻だけ取得」で候補が表示されます
           </p>
         ) : (
           <div className="space-y-5">

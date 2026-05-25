@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, X, Flame, NotebookPen } from "lucide-react";
+import { Plus, X, Flame, NotebookPen, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +21,9 @@ type Props = {
   draft: SetupDraft;
   onDraftChange: (draft: SetupDraft) => void;
   onSubmit: (data: LyricFormData) => void;
+  onFetchRhymesOnly?: (data: LyricFormData) => void;
   isLoading: boolean;
+  isFetchingRhymes?: boolean;
   onOpenNotepad?: () => void;
 };
 
@@ -60,7 +62,9 @@ export function LyricForm({
   draft: draftProp,
   onDraftChange,
   onSubmit,
+  onFetchRhymesOnly,
   isLoading,
+  isFetchingRhymes,
   onOpenNotepad,
 }: Props) {
   const draft = draftProp ?? DEFAULT_SETUP_DRAFT;
@@ -87,6 +91,14 @@ export function LyricForm({
     if (data.inputWords.length === 0) return;
     onSubmit(data);
   };
+
+  const handleRhymesOnly = () => {
+    const data = setupDraftToFormData(draft);
+    if (data.inputWords.length === 0) return;
+    onFetchRhymesOnly?.(data);
+  };
+
+  const busy = isLoading || isFetchingRhymes;
 
   return (
     <div className="studio-panel p-5 space-y-5">
@@ -298,20 +310,34 @@ export function LyricForm({
           </span>
         </label>
 
-        <Button
-          type="submit"
-          className="w-full h-12 font-display text-base tracking-widest uppercase bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_24px_-4px] shadow-primary/40"
-          disabled={isLoading}
-        >
-          {isLoading ? "生成中..." : "生成"}
-        </Button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <Button
+            type="submit"
+            className="w-full h-12 font-display text-base tracking-widest uppercase bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_24px_-4px] shadow-primary/40"
+            disabled={busy}
+          >
+            {isLoading ? "生成中..." : "生成"}
+          </Button>
+          {onFetchRhymesOnly && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleRhymesOnly}
+              disabled={busy}
+              className="w-full h-12 border-white/10 bg-white/5 hover:bg-white/10 font-display tracking-wider"
+            >
+              <Sparkles className="size-4" />
+              {isFetchingRhymes ? "取得中..." : "韻だけ取得"}
+            </Button>
+          )}
+        </div>
 
         {onOpenNotepad && (
           <Button
             type="button"
             variant="outline"
             onClick={onOpenNotepad}
-            disabled={isLoading}
+            disabled={busy}
             className="w-full border-white/10 bg-white/5 hover:bg-white/10"
           >
             <NotebookPen className="size-4" />

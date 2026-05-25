@@ -18,6 +18,9 @@ import type { LyricAnalysis, LyricCritique } from "@/lib/analysis/types";
 import { notepadToLyrics, notepadStructureHint } from "@/lib/notepad/parseNotepad";
 import type { StudioProject } from "@/lib/project/projectStorage";
 import type { InputPhrasePlan, RhymeCandidate } from "@/lib/rhyme/types";
+import { StudioToastStack } from "@/components/studio-toast-stack";
+import { useStudioToast } from "@/hooks/use-studio-toast";
+import { downloadLyricsTxt, downloadRhymesTxt } from "@/lib/export/exportText";
 import {
   DEFAULT_SETUP_DRAFT,
   loadSetupDraft,
@@ -71,10 +74,12 @@ export default function HomePage() {
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [lyricsDirty, setLyricsDirty] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingRhymes, setIsFetchingRhymes] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const { toasts, showToast, dismissToast } = useStudioToast();
 
   useEffect(() => {
     setNotepadText(loadNotepadFromStorage());
@@ -126,16 +131,18 @@ export default function HomePage() {
         if (result.analysis) {
           setAnalysis(result.analysis);
           setLyricsDirty(false);
+          showToast("分析が完了しました！", "success");
         }
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "分析に失敗しました";
         setError(message);
+        showToast(message, "error");
       } finally {
         setIsAnalyzing(false);
       }
     },
-    [],
+    [showToast],
   );
 
   const handleOpenNotepad = useCallback(() => {
@@ -177,6 +184,50 @@ export default function HomePage() {
     await runAnalysis(generatedLyrics, formData);
   }, [generatedLyrics, formData, runAnalysis]);
 
+  const handleFetchRhymesOnly = async (data: LyricFormData) => {
+    setIsFetchingRhymes(true);
+    setError(null);
+    setFormData(data);
+    setActiveTab("rhymes");
+    setMobileView("rhymes");
+
+    try {
+      const response = await fetch("/api/rhymes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          inputWords: data.inputWords,
+          allowArchaicRhymes: data.allowArchaicRhymes,
+        }),
+      });
+
+      const result = (await response.json()) as {
+        rhymeCandidates?: Record<string, RhymeCandidate[]>;
+        inputPlan?: InputPhrasePlan[];
+        error?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(result.error ?? "韻候補の取得に失敗しました");
+      }
+
+      setRhymeCandidates(result.rhymeCandidates ?? {});
+      setInputPlan(result.inputPlan ?? []);
+      const count = Object.values(result.rhymeCandidates ?? {}).reduce(
+        (n, list) => n + list.length,
+        0,
+      );
+      showToast(`韻候補の取得が完了しました！（${count}件）`, "success");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "韻候補の取得に失敗しました";
+      setError(message);
+      showToast(message, "error");
+    } finally {
+      setIsFetchingRhymes(false);
+    }
+  };
+
   const handleGenerate = async (data: LyricFormData) => {
     setIsLoading(true);
     setError(null);
@@ -213,10 +264,19 @@ export default function HomePage() {
       setInputPlan(result.inputPlan ?? []);
       setAnalysis(result.analysis ?? null);
       setLyricsDirty(false);
+      const rhymeCount = Object.values(result.rhymeCandidates ?? {}).reduce(
+        (n, list) => n + list.length,
+        0,
+      );
+      showToast(
+        `歌詞と韻候補の生成が完了しました！（韻 ${rhymeCount}件）`,
+        "success",
+      );
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "エラーが発生しました";
       setError(message);
+      showToast(message, "error");
       setGeneratedLyrics("");
       setAnalysis(null);
     } finally {
@@ -256,10 +316,12 @@ export default function HomePage() {
         setLyricsDirty(false);
       }
       if (result.critique) setCritique(result.critique);
+      showToast("AI添削が完了しました！", "success");
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "添削に失敗しました";
       setError(message);
+      showToast(message, "error");
     } finally {
       setIsAnalyzing(false);
     }
@@ -294,10 +356,12 @@ export default function HomePage() {
       }
 
       setSaveMessage("クラウド保存完了");
+      showToast("クラウドに保存しました！", "success");
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "保存に失敗しました";
       setSaveMessage(message.includes("Supabase") ? "ローカル保存は「プロジェクト」から" : message);
+      showToast(message, "info");
     } finally {
       setIsSaving(false);
     }
@@ -345,13 +409,15 @@ export default function HomePage() {
     setError(null);
     setActiveTab(project.generatedLyrics ? "lyrics" : "rhymes");
     setMobileView(project.generatedLyrics ? "lyrics" : "setup");
-  }, []);
+    showToast(`「${project.name}」を読み込みました`, "info");
+  }, [showToast]);
 
   const hasLyrics = Boolean(generatedLyrics);
   const hasRhymes = Object.values(rhymeCandidates).some((list) => list.length > 0);
 
   return (
     <div className="studio-bg h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden">
+      <StudioToastStack toasts={toasts} onDismiss={dismissToast} />
       <header className="shrink-0 border-b border-white/10 bg-black/20 backdrop-blur-md z-50 pt-[env(safe-area-inset-top)]">
         <div className="max-w-[1600px] mx-auto px-3 sm:px-6 h-12 sm:h-14 flex items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -404,7 +470,9 @@ export default function HomePage() {
               draft={setupDraft}
               onDraftChange={setSetupDraft}
               onSubmit={handleGenerate}
+              onFetchRhymesOnly={handleFetchRhymesOnly}
               isLoading={isLoading}
+              isFetchingRhymes={isFetchingRhymes}
               onOpenNotepad={handleOpenNotepad}
             />
           ) : (
@@ -455,14 +523,24 @@ export default function HomePage() {
                 isSaving={isSaving}
                 saveMessage={saveMessage}
                 isLoading={isLoading}
+                onExportTxt={() => {
+                  if (!generatedLyrics.trim()) return;
+                  downloadLyricsTxt(generatedLyrics);
+                  showToast("歌詞をTXTでダウンロードしました", "success");
+                }}
               />
             )}
             {activeTab === "rhymes" && (
               <RhymeResults
                 rhymeCandidates={rhymeCandidates}
                 inputPlan={inputPlan}
-                isLoading={isLoading}
+                isLoading={isLoading || isFetchingRhymes}
                 allowArchaicRhymes={setupDraft.allowArchaicRhymes}
+                onExportTxt={() => {
+                  if (!hasRhymes) return;
+                  downloadRhymesTxt(rhymeCandidates);
+                  showToast("韻候補をTXTでダウンロードしました", "success");
+                }}
               />
             )}
             {activeTab === "analysis" && (
